@@ -2,30 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\LoginRequest;
+use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function login(LoginRequest $request)
+    protected function store(Request $request)
     {
-        $input = $request->validated();
+        try {
+            return $user = User::create([
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'password' => Hash::make($request->input('password')),
+            ]);
 
-        $credentials = [
-            'email' => $input['email'],
-            'password' => $input['password']
-        ];
-
-        $credentials = request(['email', 'password']);
-
-        if (!$token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            response($user)->json(['message' => 'Criado com successo'], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Não foi possível criar o usuário', 'erro' => $e->getMessage()], 400);
         }
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
-        ]);
     }
 }

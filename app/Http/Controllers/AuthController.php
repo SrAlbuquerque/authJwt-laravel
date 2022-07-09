@@ -52,7 +52,7 @@ class AuthController extends Controller
     {
         //Setta as regras para passar na validação
         $validator = Validator::make($request->all(), [
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required|string|min:4',
         ]);
 
@@ -65,7 +65,9 @@ class AuthController extends Controller
         }
 
         if (!$token = auth()->attempt($validator->validated())) {
-            return response()->json(['error' => 'Não autorizado'], 401);
+            return response()->json([
+                'error' => 'Não autorizado'
+            ], 401);
         }
 
         return $this->createToken($token);
@@ -78,6 +80,20 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60,
             'user' => auth()->user(),
+        ]);
+    }
+
+    protected function profile()
+    {
+        return response()->json(auth()->user());
+    }
+
+    protected function logout()
+    {
+        auth()->logout();
+
+        return response()->json([
+            'message' => 'Usuário fez logout',
         ]);
     }
 }
